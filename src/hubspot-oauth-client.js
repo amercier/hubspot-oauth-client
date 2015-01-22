@@ -210,7 +210,7 @@
     clientId: function validate(id) { return HubSpotOAuthClient.UUID_REGEXP.test(id); },
     applicationId: function validate(id) { return isValidNumber(id); },
     applicationScope: function validate(scope) {
-      return getType(scope) === "[object Array]" &&
+      return getType(scope) === "[object Array]" && scope.length > 0 &&
         scope.every(function filterScopeItem(scopeItem) {
           return HubSpotOAuthClient.SCOPES.ALL.indexOf(scopeItem) !== -1;
         });

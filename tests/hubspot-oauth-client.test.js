@@ -85,6 +85,32 @@
     );
   });
 
+  QUnit.test("HubSpotOAuthClient validates config.applicationScope", function(assert) {
+    assert.expect(4);
+    assert.throws(
+      function() { new HubSpotOAuthClient(exclude(validConfig, [ "applicationScope" ])); },
+      new Error("Missing parameter \"applicationScope\" from config"),
+      "Missing config.applicationScope throws an error"
+    );
+    assert.throws(
+      function() { new HubSpotOAuthClient(merge(validConfig, { applicationScope: "123456" })); },
+      new Error("Parameter \"applicationScope\" in config is invalid: \"123456\""),
+      "Invalid config.applicationScope (String) throws an error"
+    );
+    assert.throws(
+      function() {
+        new HubSpotOAuthClient(merge(validConfig, { applicationScope: [ "123456" ] }));
+      },
+      new Error("Parameter \"applicationScope\" in config is invalid: \"123456\""),
+      "Invalid config.applicationScope (contains invalid value) throws an error"
+    );
+    assert.throws(
+      function() { new HubSpotOAuthClient(merge(validConfig, { applicationScope: [] })); },
+      new Error("Parameter \"applicationScope\" in config is invalid: \"\""),
+      "Invalid config.applicationScope (empty array) throws an error"
+    );
+  });
+
   QUnit.module("_hasPendingOAuthIntegration");
 
   QUnit.test("NOT IMPLEMENTED", function(assert) {
