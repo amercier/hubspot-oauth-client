@@ -1,3 +1,6 @@
 {
-  "name": "hubspot-oauth-client"
+  "name": "hubspot-oauth-client",
+  "devDependencies": {
+    "qunit": "~1.17.1"
+  }
 }
