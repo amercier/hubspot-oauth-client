@@ -111,6 +111,34 @@
     );
   });
 
+  QUnit.test("HubSpotOAuthClient validates config.windowWidth", function(assert) {
+    assert.expect(2);
+    assert.throws(
+      function() { new HubSpotOAuthClient(merge(validConfig, { windowWidth: "123456" })); },
+      new Error("Parameter \"windowWidth\" in config is invalid: \"123456\""),
+      "Invalid config.windowWidth (String) throws an error"
+    );
+    assert.throws(
+      function() { new HubSpotOAuthClient(merge(validConfig, { windowWidth: NaN })); },
+      new Error("Parameter \"windowWidth\" in config is invalid: \"NaN\""),
+      "Invalid config.windowWidth (NaN) throws an error"
+    );
+  });
+
+  QUnit.test("HubSpotOAuthClient validates config.windowHeight", function(assert) {
+    assert.expect(2);
+    assert.throws(
+      function() { new HubSpotOAuthClient(merge(validConfig, { windowHeight: "123456" })); },
+      new Error("Parameter \"windowHeight\" in config is invalid: \"123456\""),
+      "Invalid config.windowHeight (String) throws an error"
+    );
+    assert.throws(
+      function() { new HubSpotOAuthClient(merge(validConfig, { windowHeight: NaN })); },
+      new Error("Parameter \"windowHeight\" in config is invalid: \"NaN\""),
+      "Invalid config.windowHeight (NaN) throws an error"
+    );
+  });
+
   QUnit.module("_hasPendingOAuthIntegration");
 
   QUnit.test("NOT IMPLEMENTED", function(assert) {
