@@ -1,7 +1,7 @@
 (function() {
 
   var validConfig = {
-    clientId: 'cc7ef1d9-d6a5-48c5-bfe8-c3f74f20633b',
+    clientId: "cc7ef1d9-d6a5-48c5-bfe8-c3f74f20633b",
     applicationId: 123456,
     applicationScope: [
       HubSpotOAuthClient.SCOPES.CONTACTS_READ_WRITE,
@@ -14,9 +14,9 @@
         key,
         i;
     for (i = 0; i < arguments.length; i++) {
-      for (key in arguments[i]) {
-        if (arguments[i].hasOwnProperty(key)) {
-          merged[ key ] = arguments[i][ key ];
+      for (key in arguments[ i ]) {
+        if (arguments[ i ].hasOwnProperty(key)) {
+          merged[ key ] = arguments[ i ][ key ];
         }
       }
     }
@@ -24,7 +24,8 @@
   }
 
   function exclude(config, keys) {
-    var remaining = {};
+    var remaining = {},
+        key;
     for (key in config) {
       if (config.hasOwnProperty(key)) {
         if (keys.indexOf(key) === -1) {
@@ -44,7 +45,7 @@
   QUnit.test("HubSpotOAuthClient validates config.clientId", function(assert) {
     assert.expect(4);
     assert.throws(
-      function() { new HubSpotOAuthClient(exclude(validConfig, ['clientId'])); },
+      function() { new HubSpotOAuthClient(exclude(validConfig, [ "clientId" ])); },
       new Error("Missing parameter \"clientId\" from config"),
       "Missing config.clientId throws an error"
     );
@@ -68,7 +69,7 @@
   QUnit.test("HubSpotOAuthClient validates config.applicationId", function(assert) {
     assert.expect(3);
     assert.throws(
-      function() { new HubSpotOAuthClient(exclude(validConfig, ['applicationId'])); },
+      function() { new HubSpotOAuthClient(exclude(validConfig, [ "applicationId" ])); },
       new Error("Missing parameter \"applicationId\" from config"),
       "Missing config.applicationId throws an error"
     );

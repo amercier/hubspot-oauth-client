@@ -23,9 +23,9 @@
         key,
         i;
     for (i = 0; i < arguments.length; i++) {
-      for (key in arguments[i]) {
-        if (arguments[i].hasOwnProperty(key)) {
-          merged[ key ] = arguments[i][ key ];
+      for (key in arguments[ i ]) {
+        if (arguments[ i ].hasOwnProperty(key)) {
+          merged[ key ] = arguments[ i ][ key ];
         }
       }
     }
@@ -210,7 +210,7 @@
     clientId: function validate(id) { return HubSpotOAuthClient.UUID_REGEXP.test(id); },
     applicationId: function validate(id) { return isValidNumber(id); },
     applicationScope: function validate(scope) {
-      return getType(scope) === '[object Array]' &&
+      return getType(scope) === "[object Array]" &&
         scope.every(function filterScopeItem(scopeItem) {
           return HubSpotOAuthClient.SCOPES.ALL.indexOf(scopeItem) !== -1;
         });
