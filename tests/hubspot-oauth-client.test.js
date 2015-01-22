@@ -139,6 +139,15 @@
     );
   });
 
+  QUnit.test("HubSpotOAuthClient validates config.windowTitle", function(assert) {
+    assert.expect(1);
+    assert.throws(
+      function() { new HubSpotOAuthClient(merge(validConfig, { windowTitle: 123456 })); },
+      new Error("Parameter \"windowTitle\" in config is invalid: \"123456\""),
+      "Invalid config.windowTitle (number) throws an error"
+    );
+  });
+
   QUnit.module("_hasPendingOAuthIntegration");
 
   QUnit.test("NOT IMPLEMENTED", function(assert) {
