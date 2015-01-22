@@ -20,14 +20,36 @@
    */
   function merge() {
     var merged = {},
-        key;
-    arguments.forEach(function(config) {
-      for (key in config) {
-        if (config.hasOwnProperty(key)) {
-          merged[ key ] = config[ key ];
+        key,
+        i;
+    for (i = 0; i < arguments.length; i++) {
+      for (key in arguments[i]) {
+        if (arguments[i].hasOwnProperty(key)) {
+          merged[ key ] = arguments[i][ key ];
         }
       }
-    });
+    }
+    return merged;
+  }
+
+  /**
+   * Get the type of the object
+   *
+   * @param  {[type]} object Object
+   * @return {String} Returns the object type
+   */
+  function getType(object) {
+    return Object.prototype.toString.apply(object);
+  }
+
+  /**
+   * Check whether an object is a number or not
+   *
+   * @param  {Any}  number The object to check
+   * @return {Boolean} Returns `true` if `number` is a valid number (not NaN), `false` otherwise
+   */
+  function isValidNumber(number) {
+    return typeof number === "number" && !isNaN(number);
   }
 
   /**
@@ -58,7 +80,7 @@
    * @constructor
    */
   HubSpotOAuthClient = function HubSpotOAuthClient(config) {
-    this.validateConfiguration(merge(this.constructor.DEFAULT_CONFIG, config));
+    this.constructor.validateConfiguration(merge(this.constructor.DEFAULT_CONFIG, config));
     this.config = config;
     this.callbacks = {
       oAuthSuccess: [],
@@ -156,12 +178,12 @@
    * @type {Array}
    */
   HubSpotOAuthClient.SCOPES.ALL = [
-    HubSpotOAuthClient.SCOPE_OFFLINE,
-    HubSpotOAuthClient.SCOPE_CONTACTS_READ_ONLY,
-    HubSpotOAuthClient.SCOPE_CONTACTS_READ_WRITE,
-    HubSpotOAuthClient.SCOPE_BLOG_READ_WRITE,
-    HubSpotOAuthClient.SCOPE_EVENTS_READ_WRITE,
-    HubSpotOAuthClient.SCOPE_KEYWORD_READ_WRITE
+    HubSpotOAuthClient.SCOPES.OFFLINE,
+    HubSpotOAuthClient.SCOPES.CONTACTS_READ_ONLY,
+    HubSpotOAuthClient.SCOPES.CONTACTS_READ_WRITE,
+    HubSpotOAuthClient.SCOPES.BLOG_READ_WRITE,
+    HubSpotOAuthClient.SCOPES.EVENTS_READ_WRITE,
+    HubSpotOAuthClient.SCOPES.KEYWORD_READ_WRITE
   ];
 
   /**
@@ -185,16 +207,17 @@
    * @type {Object}
    */
   HubSpotOAuthClient.CONFIG_VALIDATORS = {
-    clientId: function validate(id) { return this.uuidRegExp.test(id); },
-    applicationId: function validate(id) { return typeof id === "number"; },
+    clientId: function validate(id) { return HubSpotOAuthClient.UUID_REGEXP.test(id); },
+    applicationId: function validate(id) { return isValidNumber(id); },
     applicationScope: function validate(scope) {
-      return scope.split(" ").every(function filterScopeItem(scopeItem) {
-        this.scopes.indexOf(scopeItem) !== -1;
-      });
+      return getType(scope) === '[object Array]' &&
+        scope.every(function filterScopeItem(scopeItem) {
+          return HubSpotOAuthClient.SCOPES.ALL.indexOf(scopeItem) !== -1;
+        });
     },
     windowTitle: function validate(title) { return typeof title === "string"; },
-    windowHeight: function validate(height) { return typeof height === "number"; },
-    windowWidth: function validate(width) { return typeof width === "number"; }
+    windowHeight: function validate(height) { return isValidNumber(height); },
+    windowWidth: function validate(width) { return isValidNumber(width); }
   };
 
   /**
@@ -216,20 +239,22 @@
 
     // Check for unknown parameters
     Object.keys(config).forEach(function(key) {
-      if (!(key in this.CONFIG_VALIDATORS)) {
-        throw new Error("Unknown config parameter \"" + key + "\"");
+      if (!(key in HubSpotOAuthClient.CONFIG_VALIDATORS)) {
+        throw new Error(
+          "Unknown config parameter \"" + key + "\""
+        );
       }
     });
 
     // Validate config parameters exist and are valid
-    Object.keys(this.CONFIG_VALIDATORS).forEach(function(key) {
+    Object.keys(HubSpotOAuthClient.CONFIG_VALIDATORS).forEach(function(key) {
       if (!(key in config)) {
-        throw new Error("Missing parameter \"" + key + "\" in config");
+        throw new Error("Missing parameter \"" + key + "\" from config");
       }
       var value = config[ key ];
-      if (!this.CONFIG_VALIDATORS[ key ](value)) {
+      if (!HubSpotOAuthClient.CONFIG_VALIDATORS[ key ](value)) {
         throw new Error("Parameter \"" + key + "\" in config is invalid: " +
-          "\"" + value + "\"" + " (" + Object.prototype.toString.apply(value) + ")");
+          "\"" + value + "\"");
       }
     });
   };
@@ -269,7 +294,7 @@
    * @throws {HubSpotOAuthClient.PendingIntegrationError} If an OAuth request has already been
    *                                                      initiated with a different Hub ID
    * @param {Number} hubId The new Hub ID
-   * @throws {InvalidHubIdError} If the given hub id is invalid
+   * @throws {Error} If the given hub id is invalid
    * @return {HubSpotOAuthClient} Returns this object to allow chaining.
    * @protected
    */
@@ -281,7 +306,7 @@
 
     // Check the given hub id is valid
     if (!this.constructor.isHubIdValid(hubId)) {
-      throw new this.constructor.InvalidHubIdError("Invalid HubSpot id \"" + hubId + "\"");
+      throw new Error("Invalid HubSpot id \"" + hubId + "\"");
     }
 
     // Check we don't have a pending integration
@@ -307,6 +332,7 @@
    *                            access token, for security reasons.
    * @param {Number} parameters.hubId The Hub ID (aka "Portal ID") for which the callback is about
    * @param {Number} parameters.error (optional) The value of the error returned by HubSpot, if any
+   * @throws {Error} If `parameters.hubId` is different than the current hub ID
    * @return {void}
    */
   HubSpotOAuthClient.prototype.oAuthCallback = function oAuthCallback(parameters) {
