@@ -1,6 +1,10 @@
 language: node_js
-sudo: false
 cache:
   directories:
-    - bower_components
-    - node_modules
+  - bower_components
+  - node_modules
+env:
+  global:
+    secure: KXJNv1OnlGmH0xViXRU03BUjWcnPxCsS5ajDBTeQ9CPlUwTY2BniIeDbgA1yVBMCL8rnWV2vpvDcbPfdryhFFuDzQQ3wf/I/mC/PM5Lr92XlxHWK4UIO17CwU62d1Psasw9LdV0YVqnUsoQ0Z3ppW5tTQVQJE1MTRY2guPDSkXM=
+sudo: false
+after_success: codeclimate < tests/coverage/report.lcov

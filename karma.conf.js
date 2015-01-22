@@ -9,7 +9,8 @@ module.exports = function(config) {
   config.set({
     frameworks: [ "qunit", "sinon" ],
     files: [
-      "tests/*.test.js"
+      "tests/*.test.js",
+      "src/hubspot-oauth-client.js"
     ],
     browsers: [ "PhantomJS" ],
     reporters: [ process.env.CI ? "dots" : "progress", "coverage" ],
