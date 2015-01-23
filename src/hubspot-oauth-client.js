@@ -80,8 +80,8 @@
    * @constructor
    */
   HubSpotOAuthClient = function HubSpotOAuthClient(config) {
-    this.constructor.validateConfiguration(merge(this.constructor.DEFAULT_CONFIG, config));
-    this.config = config;
+    this.config = merge(this.constructor.DEFAULT_CONFIG, config);
+    this.constructor.validateConfiguration(this.config);
     this.callbacks = {
       oAuthSuccess: [],
       oAuthError: []
@@ -219,6 +219,8 @@
     windowHeight: function validate(height) { return isValidNumber(height); },
     windowWidth: function validate(width) { return isValidNumber(width); }
   };
+
+  HubSpotOAuthClient.Promise = window.Promise;
 
   /**
    * Validate given configuration settings

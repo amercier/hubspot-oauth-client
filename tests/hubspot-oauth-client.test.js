@@ -38,11 +38,11 @@
 
   QUnit.module("HubSpotOAuthClient");
 
-  QUnit.test("HubSpotOAuthClient with valid config doesn't throw an error", function(assert) {
+  QUnit.test("Shouldn't throw an error while called with a valid config", function(assert) {
     assert.ok(new HubSpotOAuthClient(validConfig), "new HubSpotOAuthClient(valid config) passes");
   });
 
-  QUnit.test("HubSpotOAuthClient validates config.clientId", function(assert) {
+  QUnit.test("Should validate config.clientId", function(assert) {
     assert.expect(4);
     assert.throws(
       function() { new HubSpotOAuthClient(exclude(validConfig, [ "clientId" ])); },
@@ -66,7 +66,7 @@
     );
   });
 
-  QUnit.test("HubSpotOAuthClient validates config.applicationId", function(assert) {
+  QUnit.test("Should validate config.applicationId", function(assert) {
     assert.expect(3);
     assert.throws(
       function() { new HubSpotOAuthClient(exclude(validConfig, [ "applicationId" ])); },
@@ -85,7 +85,7 @@
     );
   });
 
-  QUnit.test("HubSpotOAuthClient validates config.applicationScope", function(assert) {
+  QUnit.test("Should validate config.applicationScope", function(assert) {
     assert.expect(4);
     assert.throws(
       function() { new HubSpotOAuthClient(exclude(validConfig, [ "applicationScope" ])); },
@@ -111,7 +111,7 @@
     );
   });
 
-  QUnit.test("HubSpotOAuthClient validates config.windowWidth", function(assert) {
+  QUnit.test("Should validate config.windowWidth", function(assert) {
     assert.expect(2);
     assert.throws(
       function() { new HubSpotOAuthClient(merge(validConfig, { windowWidth: "123456" })); },
@@ -125,7 +125,7 @@
     );
   });
 
-  QUnit.test("HubSpotOAuthClient validates config.windowHeight", function(assert) {
+  QUnit.test("Should validate config.windowHeight", function(assert) {
     assert.expect(2);
     assert.throws(
       function() { new HubSpotOAuthClient(merge(validConfig, { windowHeight: "123456" })); },
@@ -139,12 +139,32 @@
     );
   });
 
-  QUnit.test("HubSpotOAuthClient validates config.windowTitle", function(assert) {
+  QUnit.test("Should validate config.windowTitle", function(assert) {
     assert.expect(1);
     assert.throws(
       function() { new HubSpotOAuthClient(merge(validConfig, { windowTitle: 123456 })); },
       new Error("Parameter \"windowTitle\" in config is invalid: \"123456\""),
       "Invalid config.windowTitle (number) throws an error"
+    );
+  });
+
+  QUnit.test("Should set default parameters", function(assert) {
+    assert.expect(3);
+    var client = new HubSpotOAuthClient(validConfig);
+    assert.strictEqual(
+      client.config.windowTitle,
+      HubSpotOAuthClient.DEFAULT_CONFIG.windowTitle,
+      "windowTitle should be set to its default"
+    );
+    assert.strictEqual(
+      client.config.windowWidth,
+      HubSpotOAuthClient.DEFAULT_CONFIG.windowWidth,
+      "windowWidth should be set to its default"
+    );
+    assert.strictEqual(
+      client.config.windowHeight,
+      HubSpotOAuthClient.DEFAULT_CONFIG.windowHeight,
+      "windowHeight should be set to its default"
     );
   });
 
@@ -189,5 +209,14 @@
   QUnit.test("NOT IMPLEMENTED", function(assert) {
     assert.expect(0);
   });
+
+  // QUnit.test("Should return a Promise", function(assert) {
+  //   assert.expect(1);
+  //   var client = new HubSpotOAuthClient(validConfig);
+  //   assert.expect(
+  //     Object.prototype.toString(new HubSpotOAuthClient(validConfig).initiateOAuthIntegration()),
+  //     "[object Promise]"
+  //   );
+  // });
 
 })();
