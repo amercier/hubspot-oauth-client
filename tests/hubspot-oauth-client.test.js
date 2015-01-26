@@ -1,13 +1,14 @@
 (function() {
 
   var validConfig = {
-    clientId: "cc7ef1d9-d6a5-48c5-bfe8-c3f74f20633b",
-    applicationId: 123456,
-    applicationScope: [
-      HubSpotOAuthClient.SCOPES.CONTACTS_READ_WRITE,
-      HubSpotOAuthClient.SCOPES.EVENTS_READ_WRITE
-    ]
-  };
+      clientId: "cc7ef1d9-d6a5-48c5-bfe8-c3f74f20633b",
+      applicationId: 123456,
+      applicationScope: [
+        HubSpotOAuthClient.SCOPES.CONTACTS_READ_WRITE,
+        HubSpotOAuthClient.SCOPES.EVENTS_READ_WRITE
+      ]
+    },
+    client;
 
   function merge() {
     var merged = {},
@@ -204,19 +205,31 @@
     assert.expect(0);
   });
 
-  QUnit.module("initiateOAuthIntegration");
+  QUnit.module("initiateOAuthIntegration", {
+    beforeEach: function() {
+      client = new HubSpotOAuthClient(validConfig);
+    },
+    afterEach: function() {
+      client && client._window && client._window.close();
+    }
+  });
 
   QUnit.test("NOT IMPLEMENTED", function(assert) {
     assert.expect(0);
   });
 
-  // QUnit.test("Should return a Promise", function(assert) {
-  //   assert.expect(1);
-  //   var client = new HubSpotOAuthClient(validConfig);
-  //   assert.expect(
-  //     Object.prototype.toString(new HubSpotOAuthClient(validConfig).initiateOAuthIntegration()),
-  //     "[object Promise]"
-  //   );
-  // });
+  QUnit.test("Should open a window", function(assert) {
+    assert.expect(1);
+    client.initiateOAuthIntegration();
+    assert.notEqual(client._window, null, "Client window should not be null/undefined");
+  });
+
+  QUnit.test("Should return a thenable", function(assert) {
+    assert.expect(3);
+    var promise = client.initiateOAuthIntegration();
+    assert.notEqual(promise, null, "Doesn't return null");
+    assert.notEqual(promise.then, null, "<returned object>.then is not null");
+    assert.strictEqual(typeof promise.then, "function", "<returned object>.then is a function");
+  });
 
 })();
