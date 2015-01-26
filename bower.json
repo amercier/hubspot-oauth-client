@@ -1,6 +1,7 @@
 {
   "name": "hubspot-oauth-client",
   "devDependencies": {
-    "qunit": "~1.17.1"
+    "qunit": "~1.17.1",
+    "es6-promise": "~2.0.1"
   }
 }

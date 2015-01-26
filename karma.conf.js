@@ -9,6 +9,8 @@ module.exports = function(config) {
   config.set({
     frameworks: [ "qunit", "sinon" ],
     files: [
+      "bower_components/es6-promise/promise.js",
+      "tests/*.polyfill.js",
       "src/hubspot-oauth-client.js",
       "tests/*.test.js"
     ],
