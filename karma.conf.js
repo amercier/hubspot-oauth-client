@@ -12,12 +12,12 @@ module.exports = function(config) {
       "src/hubspot-oauth-client.js",
       "tests/*.test.js"
     ],
-    browsers: [ "PhantomJS" ],
-    reporters: [ process.env.CI ? "dots" : "progress", "coverage" ],
-    preprocessors: {
+    browsers: process.env.CI ? [ "PhantomJS" ] : [ "Chrome", "PhantomJS_debug" ],
+    reporters: process.env.CI ? [ "dots", "coverage" ] : [ "progress" ],
+    preprocessors: !process.env.CI ? {} : {
       "src/hubspot-oauth-client.js": [ "coverage" ]
     },
-    coverageReporter: {
+    coverageReporter: !process.env.CI ? {} : {
       dir: "tests/coverage",
       reporters: [
         { type: "html", subdir: "html" },
@@ -26,7 +26,7 @@ module.exports = function(config) {
         { type: "text-summary", subdir: ".", file: "summary.txt" }
       ]
     },
-    customLaunchers: {
+    customLaunchers: process.env.CI ? {} : {
       "PhantomJS_debug": {
         base: "PhantomJS",
         options: {
@@ -37,9 +37,12 @@ module.exports = function(config) {
         },
         flags: [
           "--remote-debugger-port=9000",
-          "--remote-debugger-autorun=yes"
+          "--remote-debugger-autorun=yes",
+          "--debug=true"
         ]
       }
-    }
+    },
+    singleRun: !!process.env.CI,
+    autoWatch: !process.env.CI
   });
 };
