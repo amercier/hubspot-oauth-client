@@ -392,37 +392,33 @@
   HubSpotOAuthClient.prototype.initiateOAuthIntegration = function initiateOAuthIntegration(hubId) {
     this._setHubId(hubId);
 
-    // Open the window
-    this._window = window.open(
-      this._getOAuthURL(),
-      this._getWindowTitle(),
-      this._getWindowConfig()
-    );
-
     // Throw an error if Promise implementation is not found
     if (!this.constructor.Promise) {
       throw new Error("Missing Promise implementation. Please setup HubSpotOAuthClient.Promise");
     }
 
     // Create the Promise
-    this._oAuthIntegrationPromise = new this.constructor.Promise(function(resolve, reject) {
-      this._resolveOAuthIntegrationPromise = resolve;
-      this._rejectOAuthIntegrationPromise = reject;
-    }.bind(this));
+    return (this._oAuthIntegrationPromise = new this.constructor.Promise(function(resolve, reject) {
 
-    if (!this._window) {
-      // Reject the promise if window has been blocked (ex: popup blocker)
-      this._rejectOAuthIntegrationPromise("blocked");
-    } else {
-      // Automatically reject Promise on "unload" event
-      this._window.addEventListener("unload", function() {
-        if (this._hasPendingOAuthIntegration()) {
-          this._rejectOAuthIntegrationPromise("canceled");
-        }
-      }.bind(this));
-    }
+      // Open the window
+      this._window = window.open(
+        this._getOAuthURL(),
+        this._getWindowTitle(),
+        this._getWindowConfig()
+      );
+      if (!this._window) {
+        // Reject the promise if window has been blocked (ex: popup blocker)
+        reject("blocked");
+      } else {
+        // Automatically reject Promise on "unload" event
+        this._window.addEventListener("unload", function() {
+          if (this._hasPendingOAuthIntegration()) {
+            reject("canceled");
+          }
+        }.bind(this));
+      }
 
-    return this._oAuthIntegrationPromise;
+    }.bind(this)));
   };
 
   global.HubSpotOAuthClient = HubSpotOAuthClient;

@@ -169,42 +169,6 @@
     );
   });
 
-  QUnit.module("_hasPendingOAuthIntegration");
-
-  QUnit.test("NOT IMPLEMENTED", function(assert) {
-    assert.expect(0);
-  });
-
-  QUnit.module("_setHubId");
-
-  QUnit.test("NOT IMPLEMENTED", function(assert) {
-    assert.expect(0);
-  });
-
-  QUnit.module("oAuthCallback");
-
-  QUnit.test("NOT IMPLEMENTED", function(assert) {
-    assert.expect(0);
-  });
-
-  QUnit.module("_getOAuthURL");
-
-  QUnit.test("NOT IMPLEMENTED", function(assert) {
-    assert.expect(0);
-  });
-
-  QUnit.module("_getWindowTitle");
-
-  QUnit.test("NOT IMPLEMENTED", function(assert) {
-    assert.expect(0);
-  });
-
-  QUnit.module("_getWindowConfig");
-
-  QUnit.test("NOT IMPLEMENTED", function(assert) {
-    assert.expect(0);
-  });
-
   QUnit.module("initiateOAuthIntegration", {
     beforeEach: function() {
       client = new HubSpotOAuthClient(validConfig);
@@ -230,6 +194,46 @@
     assert.notEqual(promise, null, "Doesn't return null");
     assert.notEqual(promise.then, null, "<returned object>.then is not null");
     assert.strictEqual(typeof promise.then, "function", "<returned object>.then is a function");
+  });
+
+  QUnit.module("_oAuthIntegrationPromise", {
+    beforeEach: function() {
+      client = new HubSpotOAuthClient(validConfig);
+    },
+    afterEach: function() {
+      client && client._window && client._window.close();
+    }
+  });
+
+  QUnit.test("Should be rejected with \"canceled\" if the user close the window", function(assert) {
+    assert.expect(2);
+    var done = assert.async(),
+        timeout = setTimeout(function() {
+          assert.ok(false, "Promise should be rejected after 2000ms");
+          done();
+        }, 2000);
+
+    client.initiateOAuthIntegration().then(
+      function() {
+        clearTimeout(timeout);
+        assert.ok(false, "Promise should not be resolved");
+        done();
+      },
+      function(error) {
+        clearTimeout(timeout);
+        assert.ok(true, "Promise not be rejected");
+        assert.strictEqual(error, "canceled", "Promise has been rejected with \"canceled\" reason");
+        done();
+      }
+    );
+
+    client._window.close();
+  });
+
+  QUnit.module("oAuthCallback");
+
+  QUnit.test("NOT IMPLEMENTED", function(assert) {
+    assert.expect(0);
   });
 
 })();
