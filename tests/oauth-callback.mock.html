@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8"/>
+    <title>oAuth Callback mock</title>
+
+    <!-- Replace this by server-side handling -->
+    <script src="../bower_components/query-string/query-string.js"></script>
+    <script>
+      var PARAMS = queryString.parse(location.search);
+    </script>
+  </head>
+  <body>
+    <script>
+opener.postMessage({
+  hubId: PARAMS.hubId
+}, "*");
+    </script>
+  </body>
+</html>
