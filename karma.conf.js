@@ -9,7 +9,10 @@ module.exports = function(config) {
   config.set({
     frameworks: [ "qunit", "sinon" ],
     files: [
+      "tests/karma-init.js",
+      { pattern: "tests/*.mock.html", watched: true, included: false, served: true },
       "bower_components/es6-promise/promise.js",
+      "bower_components/query-string/query-string.js",
       "tests/*.polyfill.js",
       "src/hubspot-oauth-client.js",
       "tests/*.test.js"

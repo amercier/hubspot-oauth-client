@@ -192,9 +192,11 @@
    * @type {Object}
    */
   HubSpotOAuthClient.DEFAULT_CONFIG = {
+    redirectUri: "...", // FIXME remove
     windowTitle: "Integrate with HubSpot",
     windowWidth: 600,
-    windowHeight: 400
+    windowHeight: 400,
+    cancelCheckDelay: 100
   };
 
   /**
@@ -215,9 +217,11 @@
           return HubSpotOAuthClient.SCOPES.ALL.indexOf(scopeItem) !== -1;
         });
     },
+    redirectUri: function validate() { return true; }, // FIXME implement
     windowTitle: function validate(title) { return typeof title === "string"; },
     windowHeight: function validate(height) { return isValidNumber(height); },
-    windowWidth: function validate(width) { return isValidNumber(width); }
+    windowWidth: function validate(width) { return isValidNumber(width); },
+    cancelCheckDelay: function validate(delay) { return isValidNumber(delay); }
   };
 
   HubSpotOAuthClient.Promise = global.Promise;
@@ -347,8 +351,19 @@
     }
   };
 
-  HubSpotOAuthClient.prototype._getOAuthURL = function _getOAuthURL() {
-    return this.constructor.BASE_URL + "";
+  HubSpotOAuthClient.prototype._getOAuthURL = function _getOAuthURL(seed) {
+    return this.constructor.BASE_URL + "?" + [
+        "client_id=" + global.encodeURIComponent(this.config.clientId),
+        "portalId=" + global.encodeURIComponent(this.hubId),
+        "redirect_uri=" + global.encodeURIComponent(
+          this.config.redirectUri +
+          (this.config.redirectUri.indexOf("?") === -1 ? "?" : "&") +
+          [
+            "hubId=" + this.hubId,
+            "seed=" + seed
+          ].join("&")
+        )
+      ].join("&");
   };
 
   /**
@@ -389,6 +404,11 @@
    */
   HubSpotOAuthClient.prototype.initiateOAuthIntegration = function initiateOAuthIntegration(hubId) {
 
+    var seed,
+        cleanup,
+        onMessageReceived,
+        interval;
+
     // Check the hubId has been given
     if (arguments.length === 0) {
       throw new Error("Missing Hub ID");
@@ -401,32 +421,61 @@
       throw new Error("Missing Promise implementation. Please setup HubSpotOAuthClient.Promise");
     }
 
-    // Create the Promise
-    return (this._oAuthIntegrationPromise = new this.constructor.Promise(function(resolve, reject) {
-
-      // Save
+    // Create the Promise and save resolve/reject for later
+    this._oAuthIntegrationPromise = new this.constructor.Promise(function(resolve, reject) {
       this._resolveOAuthIntegrationPromise = resolve;
       this._rejectOAuthIntegrationPromise = reject;
+    }.bind(this));
 
-      // Open the window
-      this._window = window.open(
-        this._getOAuthURL(),
-        this._getWindowTitle(),
-        this._getWindowConfig()
-      );
-      if (!this._window) {
-        // Reject the promise if window has been blocked (ex: popup blocker)
-        reject("blocked");
-      } else {
-        // Automatically reject Promise on "unload" event
-        this._window.addEventListener("unload", function() {
-          if (this._hasPendingOAuthIntegration()) {
-            reject("canceled");
-          }
-        }.bind(this));
+    seed = "" + new Date().getTime() + "-" + Math.floor(10e12 * Math.random());
+
+    // Open the window
+    this._window = window.open(
+      this._getOAuthURL(seed),
+      this._getWindowTitle(),
+      this._getWindowConfig()
+    );
+
+    // Reject the promise if window has been blocked (ex: popup blocker)
+    if (!this._window) {
+      this._rejectOAuthIntegrationPromise("blocked");
+      return;
+    }
+
+    cleanup = function() {
+      clearInterval(interval);
+      global.removeEventListener("message", onMessageReceived);
+    }.bind(this);
+
+    // Check the window regularly, and reject the Promise if the window has been
+    // closed by the user
+    interval = setInterval(function() {
+      if (this._window && (!this._window.location || !this._window.location.href)) {
+        cleanup();
+        this._rejectOAuthIntegrationPromise("canceled");
+        this._window = null;
       }
+    }.bind(this), this.config.cancelCheckDelay);
 
-    }.bind(this)));
+    // When we receive a message, either Resolve or reject the Promise depending
+    // on the result
+    onMessageReceived = function(event) {
+      if (this._window && this._window.location &&
+          this._window.location.href === event.source.location.href
+      ) {
+        cleanup();
+        this._window.close();
+        if (event.data.error) {
+          this._rejectOAuthIntegrationPromise(event.data.error);
+        } else {
+          this._resolveOAuthIntegrationPromise({ hubId: Number(event.data.hubId) });
+        }
+        this._window = null;
+      }
+    }.bind(this);
+    global.addEventListener("message", onMessageReceived, true);
+
+    return this._oAuthIntegrationPromise;
   };
 
   global.HubSpotOAuthClient = HubSpotOAuthClient;

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8"/>
+    <title>HubSpot OAuth Success mock</title>
+  </head>
+  <body>
+    <script src="../bower_components/query-string/query-string.js"></script>
+    <script>
+/**
+ * Simulate HubSpot behavior in case of success
+ * simply redirects to the given redirect_uri with a randomly generated access_token
+ */
+var get = queryString.parse(location.href),
+    uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+      return v.toString(16);
+    });
+if (!get.redirect_uri) {
+  console.error("Cannot find request_uri in " + location.href);
+}
+location.href = get.redirect_uri + (get.redirect_uri.indexOf('?') === -1 ? '?' : '&') + 'access_token=' + uuid;
+    </script>
+  </body>
+</html>

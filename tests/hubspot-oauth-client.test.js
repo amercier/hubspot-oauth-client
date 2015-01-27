@@ -8,7 +8,11 @@
         HubSpotOAuthClient.SCOPES.EVENTS_READ_WRITE
       ]
     },
-    client;
+    client,
+    getRelativeURL = function(relativeURL) {
+      var base = document.querySelector("base");
+      return base ? relativeURL.replace(/^\./, base.href) : relativeURL;
+    };
 
   function merge() {
     var merged = {},
@@ -36,6 +40,8 @@
     }
     return remaining;
   }
+
+  HubSpotOAuthClient.BASE_URL = getRelativeURL("./hubspot-login.mock.html");
 
   QUnit.module("HubSpotOAuthClient");
 
@@ -205,13 +211,13 @@
 
   QUnit.test("Should open a window", function(assert) {
     assert.expect(1);
-    client.initiateOAuthIntegration(123456);
+    client.initiateOAuthIntegration(123456).then(function() {}, function() {});
     assert.notEqual(client._window, null, "Client window should not be null/undefined");
   });
 
   QUnit.test("Should return a thenable", function(assert) {
     assert.expect(3);
-    var promise = client.initiateOAuthIntegration(12345);
+    var promise = client.initiateOAuthIntegration(12345).then(function() {}, function() {});
     assert.notEqual(promise, null, "Doesn't return null");
     assert.notEqual(promise.then, null, "<returned object>.then is not null");
     assert.strictEqual(typeof promise.then, "function", "<returned object>.then is a function");
@@ -219,11 +225,13 @@
 
   QUnit.module("_oAuthIntegrationPromise", {
     beforeEach: function() {
+      HubSpotOAuthClient.BASE_URL = getRelativeURL("./hubspot-login.mock.html");
       client = new HubSpotOAuthClient(validConfig);
     },
     afterEach: function() {
       client && client._window && client._window.close();
       client = null;
+      HubSpotOAuthClient.BASE_URL = getRelativeURL("./hubspot-login.mock.html");
     }
   });
 
@@ -231,9 +239,9 @@
     assert.expect(2);
     var done = assert.async(),
         timeout = setTimeout(function() {
-          assert.ok(false, "Promise should not be pending after 2000ms");
+          assert.ok(false, "Promise should not be pending before 5000ms");
           done();
-        }, 2000);
+        }, 5000);
 
     client.initiateOAuthIntegration(123456).then(
       function() {
@@ -243,7 +251,7 @@
       },
       function(error) {
         clearTimeout(timeout);
-        assert.ok(true, "Promise not be rejected");
+        assert.ok(true, "Promise should not be rejected");
         assert.strictEqual(error, "canceled", "Promise has been rejected with \"canceled\" reason");
         done();
       }
@@ -269,9 +277,9 @@
     var hubId = 123456,
         done = assert.async(),
         timeout = setTimeout(function() {
-          assert.ok(false, "Promise should not be pending after 2000ms");
+          assert.ok(false, "Promise should not be pending before 5000ms");
           done();
-        }, 2000);
+        }, 5000);
 
     client.initiateOAuthIntegration(hubId).then(
       function(data) {
@@ -281,9 +289,9 @@
         assert.strictEqual(data && data.hubId, hubId, "Promise data should contain the Hub ID");
         done();
       },
-      function() {
+      function(error) {
         clearTimeout(timeout);
-        assert.ok(false, "Promise not be rejected");
+        assert.ok(false, "Promise should not be rejected (" + error + ")");
         done();
       }
     );
@@ -291,6 +299,45 @@
     setTimeout(function() {
       client.oAuthCallback({ hubId: hubId });
     });
+  });
+
+  QUnit.module("redirectUri (success)", {
+    beforeEach: function() {
+      HubSpotOAuthClient.BASE_URL = getRelativeURL("./hubspot-success.mock.html");
+      client = new HubSpotOAuthClient(merge(validConfig, {
+        redirectUri: getRelativeURL("./oauth-callback.mock.html")
+      }));
+    },
+    afterEach: function() {
+      client && client._window && client._window.close();
+      client = null;
+      HubSpotOAuthClient.BASE_URL = "./hubspot-login.mock.html";
+    }
+  });
+
+  QUnit.test("Should redirect to the given URI", function(assert) {
+
+    var hubId = 123456,
+        done = assert.async(),
+        timeout = setTimeout(function() {
+          assert.ok(false, "Callback should have been called before 5000ms");
+          done();
+        }, 5000);
+
+    client.initiateOAuthIntegration(hubId).then(
+      function(data) {
+        clearTimeout(timeout);
+        assert.ok(true, "Promise should be resolved");
+        assert.notEqual(data, undefined, "Promise data should be passed to the callback");
+        assert.strictEqual(data && data.hubId, hubId, "Promise data should contain the Hub ID");
+        done();
+      },
+      function(error) {
+        clearTimeout(timeout);
+        assert.ok(false, "Promise should not be rejected (" + error + ")");
+        done();
+      }
+    );
   });
 
 })();
