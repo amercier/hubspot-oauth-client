@@ -175,22 +175,43 @@
     },
     afterEach: function() {
       client && client._window && client._window.close();
+      client = null;
     }
   });
 
-  QUnit.test("NOT IMPLEMENTED", function(assert) {
-    assert.expect(0);
+  QUnit.test("Should fail when called with an invalid Hub ID", function(assert) {
+    assert.expect(3);
+
+    assert.throws(
+      function() { client.initiateOAuthIntegration(); },
+      new Error("Missing Hub ID"),
+      "Should throw an error when Hub ID is not provided"
+    );
+    client._window && client._window.close();
+
+    assert.throws(
+      function() { client.initiateOAuthIntegration("not a number"); },
+      new Error("Invalid HubSpot id \"not a number\""),
+      "Should throw an error when Hub ID is not a number"
+    );
+    client._window && client._window.close();
+
+    assert.throws(
+      function() { client.initiateOAuthIntegration(-123456); },
+      new Error("Invalid HubSpot id \"-123456\""),
+      "Should throw an error when Hub ID is a negative number"
+    );
   });
 
   QUnit.test("Should open a window", function(assert) {
     assert.expect(1);
-    client.initiateOAuthIntegration();
+    client.initiateOAuthIntegration(123456);
     assert.notEqual(client._window, null, "Client window should not be null/undefined");
   });
 
   QUnit.test("Should return a thenable", function(assert) {
     assert.expect(3);
-    var promise = client.initiateOAuthIntegration();
+    var promise = client.initiateOAuthIntegration(12345);
     assert.notEqual(promise, null, "Doesn't return null");
     assert.notEqual(promise.then, null, "<returned object>.then is not null");
     assert.strictEqual(typeof promise.then, "function", "<returned object>.then is a function");
@@ -202,6 +223,7 @@
     },
     afterEach: function() {
       client && client._window && client._window.close();
+      client = null;
     }
   });
 
@@ -209,11 +231,11 @@
     assert.expect(2);
     var done = assert.async(),
         timeout = setTimeout(function() {
-          assert.ok(false, "Promise should be rejected after 2000ms");
+          assert.ok(false, "Promise should not be pending after 2000ms");
           done();
         }, 2000);
 
-    client.initiateOAuthIntegration().then(
+    client.initiateOAuthIntegration(123456).then(
       function() {
         clearTimeout(timeout);
         assert.ok(false, "Promise should not be resolved");
@@ -227,13 +249,48 @@
       }
     );
 
-    client._window.close();
+    setTimeout(function() {
+      client._window.close();
+    }, 0);
   });
 
-  QUnit.module("oAuthCallback");
+  QUnit.module("oAuthCallback", {
+    beforeEach: function() {
+      client = new HubSpotOAuthClient(validConfig);
+    },
+    afterEach: function() {
+      client && client._window && client._window.close();
+      client = null;
+    }
+  });
 
-  QUnit.test("NOT IMPLEMENTED", function(assert) {
-    assert.expect(0);
+  QUnit.test("Should resolve Promise when called with success", function(assert) {
+    assert.expect(3);
+    var hubId = 123456,
+        done = assert.async(),
+        timeout = setTimeout(function() {
+          assert.ok(false, "Promise should not be pending after 2000ms");
+          done();
+        }, 2000);
+
+    client.initiateOAuthIntegration(hubId).then(
+      function(data) {
+        clearTimeout(timeout);
+        assert.ok(true, "Promise should be resolved");
+        assert.notEqual(data, undefined, "Promise data should be passed to the callback");
+        assert.strictEqual(data && data.hubId, hubId, "Promise data should contain the Hub ID");
+        done();
+      },
+      function() {
+        clearTimeout(timeout);
+        assert.ok(false, "Promise not be rejected");
+        done();
+      }
+    );
+
+    setTimeout(function() {
+      client.oAuthCallback({ hubId: hubId });
+    });
   });
 
 })();

@@ -301,10 +301,6 @@
    * @protected
    */
   HubSpotOAuthClient.prototype._setHubId = function setHubId(hubId) {
-    // Do nothing if this is the same id
-    if (hubId === this.hubId) {
-      return;
-    }
 
     // Check the given hub id is valid
     if (!this.constructor.isHubIdValid(hubId)) {
@@ -317,6 +313,8 @@
         "Cannot set Hub ID to \"" + "\". A OAuth integration is pending"
       );
     }
+
+    this.hubId = Number(hubId);
   };
 
   /**
@@ -340,12 +338,12 @@
   HubSpotOAuthClient.prototype.oAuthCallback = function oAuthCallback(parameters) {
     if (parameters.hubId !== this.hubId) {
       throw new Error("Received a OAuth callback for Hub with id #" + parameters.hubId +
-        ", where #" + this.hubId + "was expected");
+        ", where #" + this.hubId + " was expected");
     }
     if ("error" in parameters) {
       this._rejectOAuthIntegrationPromise(parameters.error);
     } else {
-      this._resolveOAuthIntegrationPromise();
+      this._resolveOAuthIntegrationPromise(parameters);
     }
   };
 
@@ -390,6 +388,12 @@
    *                   (canceled, or HubSpot error, timed out)
    */
   HubSpotOAuthClient.prototype.initiateOAuthIntegration = function initiateOAuthIntegration(hubId) {
+
+    // Check the hubId has been given
+    if (arguments.length === 0) {
+      throw new Error("Missing Hub ID");
+    }
+
     this._setHubId(hubId);
 
     // Throw an error if Promise implementation is not found
@@ -399,6 +403,10 @@
 
     // Create the Promise
     return (this._oAuthIntegrationPromise = new this.constructor.Promise(function(resolve, reject) {
+
+      // Save
+      this._resolveOAuthIntegrationPromise = resolve;
+      this._rejectOAuthIntegrationPromise = reject;
 
       // Open the window
       this._window = window.open(
