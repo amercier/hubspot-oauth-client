@@ -180,7 +180,9 @@
       client = new HubSpotOAuthClient(validConfig);
     },
     afterEach: function() {
-      client && client._window && client._window.close();
+      if (client && client._window) {
+        client._window.close();
+      }
       client = null;
     }
   });
@@ -229,7 +231,9 @@
       client = new HubSpotOAuthClient(validConfig);
     },
     afterEach: function() {
-      client && client._window && client._window.close();
+      if (client && client._window) {
+        client._window.close();
+      }
       client = null;
       HubSpotOAuthClient.BASE_URL = getRelativeURL("./hubspot-login.mock.html");
     }
@@ -267,7 +271,9 @@
       client = new HubSpotOAuthClient(validConfig);
     },
     afterEach: function() {
-      client && client._window && client._window.close();
+      if (client && client._window) {
+        client._window.close();
+      }
       client = null;
     }
   });
@@ -309,7 +315,9 @@
       }));
     },
     afterEach: function() {
-      client && client._window && client._window.close();
+      if (client && client._window) {
+        client._window.close();
+      }
       client = null;
       HubSpotOAuthClient.BASE_URL = "./hubspot-login.mock.html";
     }

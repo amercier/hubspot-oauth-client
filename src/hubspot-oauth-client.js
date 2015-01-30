@@ -80,6 +80,12 @@
    * @constructor
    */
   HubSpotOAuthClient = function HubSpotOAuthClient(config) {
+
+    // Throw an error if Promise implementation is not found
+    if (!this.constructor.Promise) {
+      throw new Error("Missing Promise implementation. Please setup HubSpotOAuthClient.Promise");
+    }
+
     this.config = merge(this.constructor.DEFAULT_CONFIG, config);
     this.constructor.validateConfiguration(this.config);
     this.callbacks = {
@@ -385,6 +391,35 @@
   };
 
   /**
+   * Callback for popup window postMessage
+   *
+   * If this callback is called from the OAuth authentication window, either
+   * reject or resolve the promise depending on the data passed in the
+   * postMessage event:
+   * - if data contains a "error" field, reject with its value as a message
+   * - otherwise, resolve with all data
+   *
+   * @param  {Event}    event    PostMessage Event
+   * @param  {Function} callback Callback to execute if post message was send
+   *                             from the OAuth authentication window
+   * @return {void} Doesn't return anything
+   */
+  HubSpotOAuthClient.prototype._onMessageReceived = function(event, callback) {
+    if (this._window && this._window.location &&
+        this._window.location.href === event.source.location.href
+    ) {
+      callback();
+      this._window.close();
+      if (event.data.error) {
+        this._rejectOAuthIntegrationPromise(event.data.error);
+      } else {
+        this._resolveOAuthIntegrationPromise({ hubId: Number(event.data.hubId) });
+      }
+      this._window = null;
+    }
+  };
+
+  /**
    * Initiate an OAuth integration
    *
    * 1. Opens a HubSpot OAuth window
@@ -406,8 +441,8 @@
 
     var seed,
         cleanup,
-        onMessageReceived,
-        interval;
+        interval,
+        onMessageReceived;
 
     // Check the hubId has been given
     if (arguments.length === 0) {
@@ -415,11 +450,6 @@
     }
 
     this._setHubId(hubId);
-
-    // Throw an error if Promise implementation is not found
-    if (!this.constructor.Promise) {
-      throw new Error("Missing Promise implementation. Please setup HubSpotOAuthClient.Promise");
-    }
 
     // Create the Promise and save resolve/reject for later
     this._oAuthIntegrationPromise = new this.constructor.Promise(function(resolve, reject) {
@@ -447,6 +477,10 @@
       global.removeEventListener("message", onMessageReceived);
     }.bind(this);
 
+    onMessageReceived = function(event) {
+      this._onMessageReceived(event, cleanup);
+    }.bind(this);
+
     // Check the window regularly, and reject the Promise if the window has been
     // closed by the user
     interval = setInterval(function() {
@@ -459,20 +493,6 @@
 
     // When we receive a message, either Resolve or reject the Promise depending
     // on the result
-    onMessageReceived = function(event) {
-      if (this._window && this._window.location &&
-          this._window.location.href === event.source.location.href
-      ) {
-        cleanup();
-        this._window.close();
-        if (event.data.error) {
-          this._rejectOAuthIntegrationPromise(event.data.error);
-        } else {
-          this._resolveOAuthIntegrationPromise({ hubId: Number(event.data.hubId) });
-        }
-        this._window = null;
-      }
-    }.bind(this);
     global.addEventListener("message", onMessageReceived, true);
 
     return this._oAuthIntegrationPromise;
