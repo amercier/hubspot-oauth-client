@@ -41,7 +41,7 @@
     return remaining;
   }
 
-  HubSpotOAuthClient.BASE_URL = getRelativeURL("./hubspot-login.mock.html");
+  HubSpotOAuthClient.BASE_URL = getRelativeURL("./stubs/hubspot-login.html");
 
   QUnit.module("HubSpotOAuthClient");
 
@@ -227,7 +227,7 @@
 
   QUnit.module("_oAuthIntegrationPromise", {
     beforeEach: function() {
-      HubSpotOAuthClient.BASE_URL = getRelativeURL("./hubspot-login.mock.html");
+      HubSpotOAuthClient.BASE_URL = getRelativeURL("./stubs/hubspot-login.html");
       client = new HubSpotOAuthClient(validConfig);
     },
     afterEach: function() {
@@ -235,7 +235,7 @@
         client._window.close();
       }
       client = null;
-      HubSpotOAuthClient.BASE_URL = getRelativeURL("./hubspot-login.mock.html");
+      HubSpotOAuthClient.BASE_URL = getRelativeURL("./stubs/hubspot-login.html");
     }
   });
 
@@ -309,9 +309,9 @@
 
   QUnit.module("redirectUri (success)", {
     beforeEach: function() {
-      HubSpotOAuthClient.BASE_URL = getRelativeURL("./hubspot-success.mock.html");
+      HubSpotOAuthClient.BASE_URL = getRelativeURL("./stubs/hubspot-success.html");
       client = new HubSpotOAuthClient(merge(validConfig, {
-        redirectUri: getRelativeURL("./oauth-callback.mock.html")
+        redirectUri: "./oauth-callback.html"
       }));
     },
     afterEach: function() {
@@ -319,7 +319,7 @@
         client._window.close();
       }
       client = null;
-      HubSpotOAuthClient.BASE_URL = "./hubspot-login.mock.html";
+      HubSpotOAuthClient.BASE_URL = "./hubspot-login.html";
     }
   });
 
