@@ -1,5 +1,35 @@
 {
   "name": "hubspot-oauth-client",
+  "description": "Lightweight wrapper around window.open() that adds Promise and postMessage support",
+  "licence": "MIT",
+  "keywords": [
+    "popup",
+    "window",
+    "open",
+    "window.open",
+    "promise",
+    "promise-aplus",
+    "postMessage"
+  ],
+  "authors": [
+    { "name": "Alex Mercier", "email": "pro.alexandre.mercier@gmail.com", "homepage": "http://amercier.com" }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/amercier/hubspot-oauth-client.git"
+  },
+  "main": "dist/hubspot-oauth-client.js",
+  "ignore": [
+    ".*",
+    "*.md",
+    "gulpfile.js",
+    "karma.conf.js",
+    "LICENSE",
+    "node_modules",
+    "package.json",
+    "src",
+    "tests"
+  ],
   "dependencies": {
     "promise-window": "~0.3.4"
   },

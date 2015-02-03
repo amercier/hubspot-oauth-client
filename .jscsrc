@@ -3,6 +3,7 @@
   "disallowSpacesInsideArrayBrackets": { "allExcept": [ "[", "]" ] },
   "excludeFiles": [
     "bower_components",
+    "dist",
     "node_modules",
     "tests/coverage"
   ]

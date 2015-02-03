@@ -4,8 +4,7 @@
  * A JavaScript SDK for the HubSpot API that is used to facilitate OAuth authentication with
  * HubSpot.
  *
- * https://github.com/amercier/hubspot-oauth-client
- * @ignore
+ * see https://github.com/amercier/hubspot-oauth-client
  */
 (function() {
   'use strict';
@@ -358,15 +357,6 @@
     return this._getPromiseWindow().open();
   };
 
-  // Exports PromiseWindow to the global scope
-  /* jshint ignore:start */
-  if (typeof define === 'function' && define.amd) {
-    define([], function() { return HubSpotOAuthClient });
-  } else if (typeof exports === 'object') {
-    module.exports = HubSpotOAuthClient;
-  } else {
-    root.HubSpotOAuthClient = HubSpotOAuthClient;
-  }
-  /* jshint ignore:end */
+  root.HubSpotOAuthClient = HubSpotOAuthClient;
 
 })();
