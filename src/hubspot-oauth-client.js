@@ -6,30 +6,35 @@
  *
  * see https://github.com/amercier/hubspot-oauth-client
  */
-(function(global) {
-  "use strict";
+(function() {
+  'use strict';
 
-  var HubSpotOAuthClient;
+  var root = window,
+      prototype,
+      validScopes;
 
   /**
-   * Merge objects
+   * Merge the contents of two or more objects together into the first object.
    *
-   * @param {Object} ... Objects to merge
-   * @return {Object} Returns a new `Object` that contains the given objects values, merged
-   *                  together. If a key appear in more than one parameters, the last one is kept.
+   *     merge( target [, object1 ] [, objectN ] )
+   *
+   * @param {Object} target  An object that will receive the new properties if
+   *                         additional objects are passed in.
+   * @param {Object} object1 An object containing additional properties to merge in.
+   * @param {Object} objectN An object containing additional properties to merge in.
+   * @return {Object} Returns the first object.
+   * @ignore
    */
-  function merge() {
-    var merged = {},
-        key,
-        i;
-    for (i = 0; i < arguments.length; i++) {
-      for (key in arguments[ i ]) {
-        if (arguments[ i ].hasOwnProperty(key)) {
-          merged[ key ] = arguments[ i ][ key ];
+  function extend() {
+    var extended = arguments[0], key, i;
+    for (i = 1; i < arguments.length; i++) {
+      for (key in arguments[i]) {
+        if (arguments[i].hasOwnProperty(key)) {
+          extended[key] = arguments[i][key];
         }
       }
     }
-    return merged;
+    return extended;
   }
 
   /**
@@ -49,27 +54,11 @@
    * @return {Boolean} Returns `true` if `number` is a valid number (not NaN), `false` otherwise
    */
   function isValidNumber(number) {
-    return typeof number === "number" && !isNaN(number);
+    return typeof number === 'number' && !isNaN(number);
   }
 
-  /**
-   * Create a config string for a centered popup config
-   *
-   * @param  {Number} width  Width of the popup window
-   * @param  {Number} height Width of the popup window
-   * @return {Stirng} Returns the modal config
-   */
-  function popupWindowConfig(width, height) {
-    // Fixes dual-screen position
-    var dualScreenLeft = window.screenLeft !== undefined ? window.screenLeft : screen.left,
-        dualScreenTop = window.screenTop !== undefined ? window.screenTop : screen.top,
-        w = window.innerWidth || document.documentElement.clientWidth || screen.width,
-        h = window.innerHeight || document.documentElement.clientHeight || screen.height,
-        left = (w / 2) - (width / 2) + dualScreenLeft,
-        top =  (h / 2) - (height / 2) + dualScreenTop;
-
-    return "scrollbars=yes, width=" + width + ", height=" + height +
-      ", top=" + top + ", left=" + left;
+  function isValidURI(uri) {
+    return typeof uri === 'string';
   }
 
   /**
@@ -79,27 +68,20 @@
    * @param {config} config.clientId [description]
    * @constructor
    */
-  HubSpotOAuthClient = function HubSpotOAuthClient(config) {
+  function HubSpotOAuthClient(config) {
 
     // Throw an error if Promise implementation is not found
     if (!this.constructor.Promise) {
-      throw new Error("Missing Promise implementation. Please setup HubSpotOAuthClient.Promise");
+      throw new Error('Missing Promise implementation. Please setup HubSpotOAuthClient.Promise');
     }
 
-    this.config = merge(this.constructor.DEFAULT_CONFIG, config);
+    this.config = extend({}, this.constructor.DEFAULT_CONFIG, config);
     this.constructor.validateConfiguration(this.config);
     this.callbacks = {
       oAuthSuccess: [],
       oAuthError: []
     };
-  };
-
-  /**
-   * HubSpot API base URL
-   * This should never be modified, unless for testing purposes.
-   * @type {String}
-   */
-  HubSpotOAuthClient.BASE_URL = "https://api.hubapi.com";
+  }
 
   /**
    * Regular expression for UUID
@@ -126,7 +108,7 @@
    *
    * @type {String}
    */
-  HubSpotOAuthClient.SCOPES.OFFLINE = "offline";
+  HubSpotOAuthClient.SCOPES.OFFLINE = 'offline';
 
   /**
    * Contacts Read/Write scope
@@ -137,7 +119,7 @@
    *
    * @type {String}
    */
-  HubSpotOAuthClient.SCOPES.CONTACTS_READ_ONLY = "contacts-ro";
+  HubSpotOAuthClient.SCOPES.CONTACTS_READ_ONLY = 'contacts-ro';
 
   /**
    * Contacts Read-Only scope
@@ -147,7 +129,7 @@
    *
    * @type {String}
    */
-  HubSpotOAuthClient.SCOPES.CONTACTS_READ_WRITE = "contacts-rw";
+  HubSpotOAuthClient.SCOPES.CONTACTS_READ_WRITE = 'contacts-rw';
 
   /**
    * Blog Read/Write
@@ -157,7 +139,7 @@
    *
    * @type {String}
    */
-  HubSpotOAuthClient.SCOPES.BLOG_READ_WRITE = "blog-rw";
+  HubSpotOAuthClient.SCOPES.BLOG_READ_WRITE = 'blog-rw';
 
   /**
    * Events Read/Write
@@ -167,7 +149,7 @@
    *
    * @type {String}
    */
-  HubSpotOAuthClient.SCOPES.EVENTS_READ_WRITE = "events-rw";
+  HubSpotOAuthClient.SCOPES.EVENTS_READ_WRITE = 'events-rw';
 
   /**
    * Keywords Read/Write
@@ -177,13 +159,13 @@
    *
    * @type {String}
    */
-  HubSpotOAuthClient.SCOPES.KEYWORD_READ_WRITE = "keyword-rw";
+  HubSpotOAuthClient.SCOPES.KEYWORD_READ_WRITE = 'keyword-rw';
 
   /**
    * All application scopes
    * @type {Array}
    */
-  HubSpotOAuthClient.SCOPES.ALL = [
+  validScopes = [
     HubSpotOAuthClient.SCOPES.OFFLINE,
     HubSpotOAuthClient.SCOPES.CONTACTS_READ_ONLY,
     HubSpotOAuthClient.SCOPES.CONTACTS_READ_WRITE,
@@ -198,8 +180,8 @@
    * @type {Object}
    */
   HubSpotOAuthClient.DEFAULT_CONFIG = {
-    redirectUri: "...", // FIXME remove
-    windowTitle: "Integrate with HubSpot",
+    oAuthURI: 'https://app.hubspot.com/auth/authenticate/',
+    windowTitle: 'Integrate with HubSpot',
     windowWidth: 600,
     windowHeight: 400,
     cancelCheckDelay: 100
@@ -215,22 +197,23 @@
    * @type {Object}
    */
   HubSpotOAuthClient.CONFIG_VALIDATORS = {
+    oAuthURI: isValidURI,
     clientId: function validate(id) { return HubSpotOAuthClient.UUID_REGEXP.test(id); },
     applicationId: function validate(id) { return isValidNumber(id); },
     applicationScope: function validate(scope) {
-      return getType(scope) === "[object Array]" && scope.length > 0 &&
+      return getType(scope) === '[object Array]' && scope.length > 0 &&
         scope.every(function filterScopeItem(scopeItem) {
-          return HubSpotOAuthClient.SCOPES.ALL.indexOf(scopeItem) !== -1;
+          return validScopes.indexOf(scopeItem) !== -1;
         });
     },
-    redirectUri: function validate() { return true; }, // FIXME implement
-    windowTitle: function validate(title) { return typeof title === "string"; },
+    redirectURI: isValidURI,
+    windowTitle: function validate(title) { return typeof title === 'string'; },
     windowHeight: function validate(height) { return isValidNumber(height); },
     windowWidth: function validate(width) { return isValidNumber(width); },
     cancelCheckDelay: function validate(delay) { return isValidNumber(delay); }
   };
 
-  HubSpotOAuthClient.Promise = global.Promise;
+  HubSpotOAuthClient.Promise = root.Promise;
 
   /**
    * Validate given configuration settings
@@ -253,7 +236,7 @@
     Object.keys(config).forEach(function(key) {
       if (!(key in HubSpotOAuthClient.CONFIG_VALIDATORS)) {
         throw new Error(
-          "Unknown config parameter \"" + key + "\""
+          'Unknown config parameter "' + key + '"'
         );
       }
     });
@@ -261,12 +244,12 @@
     // Validate config parameters exist and are valid
     Object.keys(HubSpotOAuthClient.CONFIG_VALIDATORS).forEach(function(key) {
       if (!(key in config)) {
-        throw new Error("Missing parameter \"" + key + "\" from config");
+        throw new Error('Missing parameter "' + key + '" from config');
       }
-      var value = config[ key ];
-      if (!HubSpotOAuthClient.CONFIG_VALIDATORS[ key ](value)) {
-        throw new Error("Parameter \"" + key + "\" in config is invalid: " +
-          "\"" + value + "\"");
+      var value = config[key];
+      if (!HubSpotOAuthClient.CONFIG_VALIDATORS[key](value)) {
+        throw new Error('Parameter "' + key + '" in config is invalid: ' +
+          '"' + value + '"');
       }
     });
   };
@@ -282,23 +265,7 @@
     return !isNaN(hubIdNumber) && hubIdNumber > 0;
   };
 
-  /**
-   * Check whether a OAuth request is pending or not
-   *
-   * @return {Boolean} [description]
-   */
-  HubSpotOAuthClient.prototype._hasPendingOAuthIntegration = function _hasPendingOAuthIntegration()
-  {
-    if (!this._oAuthIntegrationPromise) {
-      return false;
-    }
-
-    // As Promise/A+ doesn't define a standard way to get current
-    var pending = true,
-        updateState = function() { pending = false; };
-    this._oAuthIntegrationPromise.then(updateState, updateState);
-    return pending;
-  };
+  prototype = HubSpotOAuthClient.prototype;
 
   /**
    * Set the Hub ID
@@ -310,113 +277,55 @@
    * @return {HubSpotOAuthClient} Returns this object to allow chaining.
    * @protected
    */
-  HubSpotOAuthClient.prototype._setHubId = function setHubId(hubId) {
+  prototype._setHubId = function setHubId(hubId) {
 
     // Check the given hub id is valid
     if (!this.constructor.isHubIdValid(hubId)) {
-      throw new Error("Invalid HubSpot id \"" + hubId + "\"");
+      throw new Error('Invalid HubSpot id "' + hubId + '"');
     }
 
     // Check we don't have a pending integration
-    if (this._hasPendingOAuthIntegration()) {
+    if (this._getPromiseWindow().isOpen()) {
       throw new this.constructor.PendingIntegrationError(
-        "Cannot set Hub ID to \"" + "\". A OAuth integration is pending"
+        'Cannot set Hub ID to "' + '". A OAuth integration is pending'
       );
     }
 
     this.hubId = Number(hubId);
   };
 
-  /**
-   * oAuth callback
-   *
-   * This method is intended to be run by the page hosting the oAuth callback:
-   *
-   *     // Notify the parent window or iframe of the result
-   *     (window.opener || window.parent).hubspotClient.oAuthCallback();
-   *
-   * The result (success or failure, and data) is automatically determined from the given
-   * parameters.
-   *
-   * @param {Object} parameters The parameters returned by HubSpot. This object MUST NOT contain the
-   *                            access token, for security reasons.
-   * @param {Number} parameters.hubId The Hub ID (aka "Portal ID") for which the callback is about
-   * @param {Number} parameters.error (optional) The value of the error returned by HubSpot, if any
-   * @throws {Error} If `parameters.hubId` is different than the current hub ID
-   * @return {void}
-   */
-  HubSpotOAuthClient.prototype.oAuthCallback = function oAuthCallback(parameters) {
-    if (parameters.hubId !== this.hubId) {
-      throw new Error("Received a OAuth callback for Hub with id #" + parameters.hubId +
-        ", where #" + this.hubId + " was expected");
-    }
-    if ("error" in parameters) {
-      this._rejectOAuthIntegrationPromise(parameters.error);
-    } else {
-      this._resolveOAuthIntegrationPromise(parameters);
-    }
-  };
-
-  HubSpotOAuthClient.prototype._getOAuthURL = function _getOAuthURL(seed) {
-    return this.constructor.BASE_URL + "?" + [
-        "client_id=" + global.encodeURIComponent(this.config.clientId),
-        "portalId=" + global.encodeURIComponent(this.hubId),
-        "redirect_uri=" + global.encodeURIComponent(
-          this.config.redirectUri +
-          (this.config.redirectUri.indexOf("?") === -1 ? "?" : "&") +
+  // TODO
+  prototype._getIntegrationURI = function _getIntegrationURI() {
+    return this.constructor.BASE_URL + '?' + [
+        'client_id=' + root.encodeURIComponent(this.config.clientId),
+        'portalId=' + root.encodeURIComponent(this.hubId),
+        'redirect_uri=' + root.encodeURIComponent(
+          this.config.redirectURI +
+          (this.config.redirectURI.indexOf('?') === -1 ? '?' : '&') +
           [
-            "hubId=" + this.hubId,
-            "seed=" + seed
-          ].join("&")
+            'hubId=' + this.hubId
+          ].join('&')
         )
-      ].join("&");
+      ].join('&');
   };
 
-  /**
-   * Get the OAuth integration window title
-   *
-   * @return {String} [description]
-   */
-  HubSpotOAuthClient.prototype._getWindowTitle = function _getWindowTitle() {
-    return this.config.windowTitle;
-  };
-
-  /**
-   * Get the poup window config
-   *
-   * @return {String} Returns the window config
-   */
-  HubSpotOAuthClient.prototype._getWindowConfig = function _getWindowConfig() {
-    return popupWindowConfig(this.config.windowWidth, this.config.windowHeight);
-  };
-
-  /**
-   * Callback for popup window postMessage
-   *
-   * If this callback is called from the OAuth authentication window, either
-   * reject or resolve the promise depending on the data passed in the
-   * postMessage event:
-   * - if data contains a "error" field, reject with its value as a message
-   * - otherwise, resolve with all data
-   *
-   * @param  {Event}    event    PostMessage Event
-   * @param  {Function} callback Callback to execute if post message was send
-   *                             from the OAuth authentication window
-   * @return {void} Doesn't return anything
-   */
-  HubSpotOAuthClient.prototype._onMessageReceived = function(event, callback) {
-    if (this._window && this._window.location &&
-        this._window.location.href === event.source.location.href
-    ) {
-      callback();
-      this._window.close();
-      if (event.data.error) {
-        this._rejectOAuthIntegrationPromise(event.data.error);
-      } else {
-        this._resolveOAuthIntegrationPromise({ hubId: Number(event.data.hubId) });
-      }
-      this._window = null;
+  prototype._getPromiseWindow = function() {
+    if (!this._promiseWindow) {
+      this._promiseWindow = new PromiseWindow(
+        this._getIntegrationURI(),
+        extend({}, this._config, {
+          onPostMessage: function onPostMessage(event) {
+            if ('hubId' in event.data) {
+              event.data.hubId = Number(event.data.hubId);
+            }
+            PromiseWindow.defaultConfig.onPostMessage.call(this, event);
+          }
+        })
+      );
+    } else {
+      this._promiseWindow.setURI(this._getIntegrationURI());
     }
+    return this._promiseWindow;
   };
 
   /**
@@ -428,8 +337,8 @@
    * 4. Redirect to the configured
    *
    * Rejection causes:
-   * - FIXME document HubSpot errors
-   * - "canceled": user has closed the window
+   * - TODO document HubSpot errors
+   * - 'canceled': user has closed the window
    *
    * @throws {HubSpotOAuthClient.PendingIntegrationError} If an OAuth request has already been
    *                                                           initiated with a different Hub ID
@@ -437,67 +346,17 @@
    * @return {Promise} Returns a Promise that will be either fulfilled (Oauth success) or rejected
    *                   (canceled, or HubSpot error, timed out)
    */
-  HubSpotOAuthClient.prototype.initiateOAuthIntegration = function initiateOAuthIntegration(hubId) {
+  prototype.initiateIntegration = function initiateIntegration(hubId) {
 
-    var seed,
-        cleanup,
-        interval,
-        onMessageReceived;
-
-    // Check the hubId has been given
+    // Set the Hub ID
     if (arguments.length === 0) {
-      throw new Error("Missing Hub ID");
+      throw new Error('Missing Hub ID');
     }
-
     this._setHubId(hubId);
 
-    // Create the Promise and save resolve/reject for later
-    this._oAuthIntegrationPromise = new this.constructor.Promise(function(resolve, reject) {
-      this._resolveOAuthIntegrationPromise = resolve;
-      this._rejectOAuthIntegrationPromise = reject;
-    }.bind(this));
-
-    seed = "" + new Date().getTime() + "-" + Math.floor(10e12 * Math.random());
-
-    // Open the window
-    this._window = window.open(
-      this._getOAuthURL(seed),
-      this._getWindowTitle(),
-      this._getWindowConfig()
-    );
-
-    // Reject the promise if window has been blocked (ex: popup blocker)
-    if (!this._window) {
-      this._rejectOAuthIntegrationPromise("blocked");
-      return;
-    }
-
-    cleanup = function() {
-      clearInterval(interval);
-      global.removeEventListener("message", onMessageReceived);
-    }.bind(this);
-
-    onMessageReceived = function(event) {
-      this._onMessageReceived(event, cleanup);
-    }.bind(this);
-
-    // Check the window regularly, and reject the Promise if the window has been
-    // closed by the user
-    interval = setInterval(function() {
-      if (this._window && (!this._window.location || !this._window.location.href)) {
-        cleanup();
-        this._rejectOAuthIntegrationPromise("canceled");
-        this._window = null;
-      }
-    }.bind(this), this.config.cancelCheckDelay);
-
-    // When we receive a message, either Resolve or reject the Promise depending
-    // on the result
-    global.addEventListener("message", onMessageReceived, true);
-
-    return this._oAuthIntegrationPromise;
+    return this._getPromiseWindow().open();
   };
 
-  global.HubSpotOAuthClient = HubSpotOAuthClient;
+  root.HubSpotOAuthClient = HubSpotOAuthClient;
 
-})(this);
+})();

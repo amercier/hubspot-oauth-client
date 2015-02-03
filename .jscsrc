@@ -1,5 +1,6 @@
 {
-  "preset": "jquery",
+  "validateQuoteMarks": "'",
+  "disallowSpacesInsideArrayBrackets": { "allExcept": [ "[", "]" ] },
   "excludeFiles": [
     "bower_components",
     "node_modules",

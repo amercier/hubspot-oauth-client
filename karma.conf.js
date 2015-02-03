@@ -4,46 +4,47 @@
 // see http://karma-runner.github.io/0.12/config/configuration-file.html
 
 module.exports = function(config) {
-  "use strict";
+  'use strict';
 
   config.set({
-    frameworks: [ "qunit", "sinon" ],
+    frameworks: ['qunit', 'sinon'],
     files: [
-      "tests/karma-init.js",
-      { pattern: "tests/stubs/*", watched: true, included: false, served: true },
-      "bower_components/es6-promise/promise.js",
-      "bower_components/query-string/query-string.js",
-      "tests/*.polyfill.js",
-      "src/hubspot-oauth-client.js",
-      "tests/*.test.js"
+      'tests/karma-init.js',
+      { pattern: 'tests/stubs/*', watched: true, included: false, served: true },
+      'bower_components/bind-polyfill/index.js',
+      'bower_components/promise-polyfill/Promise.js',
+      'bower_components/promise-window/dist/promise-window.js',
+      'bower_components/query-string/query-string.js',
+      'src/hubspot-oauth-client.js',
+      'tests/*.test.js'
     ],
-    browsers: process.env.CI ? [ "PhantomJS" ] : [ "Chrome", "PhantomJS_debug" ],
-    reporters: process.env.CI ? [ "dots", "coverage" ] : [ "progress" ],
+    browsers: process.env.CI ? ['PhantomJS'] : ['Chrome', 'PhantomJS_debug'],
+    reporters: process.env.CI ? ['dots', 'coverage'] : ['progress'],
     preprocessors: !process.env.CI ? {} : {
-      "src/hubspot-oauth-client.js": [ "coverage" ]
+      'src/hubspot-oauth-client.js': ['coverage']
     },
     coverageReporter: !process.env.CI ? {} : {
-      dir: "tests/coverage",
+      dir: 'tests/coverage',
       reporters: [
-        { type: "html", subdir: "html" },
-        { type: "lcovonly", subdir: ".", file: "report.lcov" },
-        { type: "text", subdir: ".", file: "report.txt" },
-        { type: "text-summary", subdir: ".", file: "summary.txt" }
+        { type: 'html', subdir: 'html' },
+        { type: 'lcovonly', subdir: '.', file: 'report.lcov' },
+        { type: 'text', subdir: '.', file: 'report.txt' },
+        { type: 'text-summary', subdir: '.', file: 'summary.txt' }
       ]
     },
     customLaunchers: process.env.CI ? {} : {
-      "PhantomJS_debug": {
-        base: "PhantomJS",
+      'PhantomJS_debug': {
+        base: 'PhantomJS',
         options: {
-          windowName: "Custom PhantomJS",
+          windowName: 'Custom PhantomJS',
           settings: {
             webSecurityEnabled: false
           }
         },
         flags: [
-          "--remote-debugger-port=9000",
-          "--remote-debugger-autorun=yes",
-          "--debug=true"
+          '--remote-debugger-port=9000',
+          '--remote-debugger-autorun=yes',
+          '--debug=true'
         ]
       }
     },
