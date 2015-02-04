@@ -4,7 +4,8 @@
  * A JavaScript SDK for the HubSpot API that is used to facilitate OAuth authentication with
  * HubSpot.
  *
- * see https://github.com/amercier/hubspot-oauth-client
+ * https://github.com/amercier/hubspot-oauth-client
+ * @ignore
  */
 (function() {
   'use strict';
@@ -61,6 +62,12 @@
     return typeof uri === 'string';
   }
 
+  function fixedEncodeURIComponent(str) {
+    return root.encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
+      return '%' + c.charCodeAt(0).toString(16);
+    });
+  }
+
   /**
    * Create a new HubSpot Client
    *
@@ -69,11 +76,6 @@
    * @constructor
    */
   function HubSpotOAuthClient(config) {
-
-    // Throw an error if Promise implementation is not found
-    if (!this.constructor.Promise) {
-      throw new Error('Missing Promise implementation. Please setup HubSpotOAuthClient.Promise');
-    }
 
     this.config = extend({}, this.constructor.DEFAULT_CONFIG, config);
     this.constructor.validateConfiguration(this.config);
@@ -180,8 +182,7 @@
    * @type {Object}
    */
   HubSpotOAuthClient.DEFAULT_CONFIG = {
-    oAuthURI: 'https://app.hubspot.com/auth/authenticate/',
-    windowTitle: 'Integrate with HubSpot',
+    integrationURI: 'https://app.hubspot.com/auth/authenticate',
     windowWidth: 600,
     windowHeight: 400,
     cancelCheckDelay: 100
@@ -197,9 +198,8 @@
    * @type {Object}
    */
   HubSpotOAuthClient.CONFIG_VALIDATORS = {
-    oAuthURI: isValidURI,
+    integrationURI: isValidURI,
     clientId: function validate(id) { return HubSpotOAuthClient.UUID_REGEXP.test(id); },
-    applicationId: function validate(id) { return isValidNumber(id); },
     applicationScope: function validate(scope) {
       return getType(scope) === '[object Array]' && scope.length > 0 &&
         scope.every(function filterScopeItem(scopeItem) {
@@ -207,13 +207,10 @@
         });
     },
     redirectURI: isValidURI,
-    windowTitle: function validate(title) { return typeof title === 'string'; },
     windowHeight: function validate(height) { return isValidNumber(height); },
     windowWidth: function validate(width) { return isValidNumber(width); },
     cancelCheckDelay: function validate(delay) { return isValidNumber(delay); }
   };
-
-  HubSpotOAuthClient.Promise = root.Promise;
 
   /**
    * Validate given configuration settings
@@ -267,6 +264,10 @@
 
   prototype = HubSpotOAuthClient.prototype;
 
+  prototype.isOpen = function isOpen() {
+    return this._promiseWindow && this._promiseWindow.isOpen();
+  };
+
   /**
    * Set the Hub ID
    *
@@ -285,7 +286,7 @@
     }
 
     // Check we don't have a pending integration
-    if (this._getPromiseWindow().isOpen()) {
+    if (this.isOpen()) {
       throw new this.constructor.PendingIntegrationError(
         'Cannot set Hub ID to "' + '". A OAuth integration is pending'
       );
@@ -296,10 +297,11 @@
 
   // TODO
   prototype._getIntegrationURI = function _getIntegrationURI() {
-    return this.constructor.BASE_URL + '?' + [
-        'client_id=' + root.encodeURIComponent(this.config.clientId),
-        'portalId=' + root.encodeURIComponent(this.hubId),
-        'redirect_uri=' + root.encodeURIComponent(
+    return this.config.integrationURI + '?' + [
+        'client_id=' + fixedEncodeURIComponent(this.config.clientId),
+        'portalId=' + fixedEncodeURIComponent(this.hubId),
+        'scope=' + fixedEncodeURIComponent(this.config.applicationScope.join(' ')).replace('%20', '+'),
+        'redirect_uri=' + fixedEncodeURIComponent(
           this.config.redirectURI +
           (this.config.redirectURI.indexOf('?') === -1 ? '?' : '&') +
           [
@@ -322,8 +324,6 @@
           }
         })
       );
-    } else {
-      this._promiseWindow.setURI(this._getIntegrationURI());
     }
     return this._promiseWindow;
   };
@@ -357,6 +357,15 @@
     return this._getPromiseWindow().open();
   };
 
-  root.HubSpotOAuthClient = HubSpotOAuthClient;
+  // Exports PromiseWindow to the global scope
+  /* jshint ignore:start */
+  if (typeof define === 'function' && define.amd) {
+    define([], function() { return HubSpotOAuthClient });
+  } else if (typeof exports === 'object') {
+    module.exports = HubSpotOAuthClient;
+  } else {
+    root.HubSpotOAuthClient = HubSpotOAuthClient;
+  }
+  /* jshint ignore:end */
 
 })();

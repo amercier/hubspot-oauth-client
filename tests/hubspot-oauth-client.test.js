@@ -1,20 +1,21 @@
 (function(QUnit) {
   'use strict';
 
-  var validConfig = {
-      clientId: 'cc7ef1d9-d6a5-48c5-bfe8-c3f74f20633b',
-      applicationId: 123456,
-      applicationScope: [
-        HubSpotOAuthClient.SCOPES.CONTACTS_READ_WRITE,
-        HubSpotOAuthClient.SCOPES.EVENTS_READ_WRITE
-      ],
-      redirectURI: './not-found.html'
-    },
-    client,
-    getRelativeURL = function(relativeURL) {
-      var base = document.querySelector('base');
-      return base ? relativeURL.replace(/^\./, base.href) : relativeURL;
-    };
+  function getRelativeURL(relativeURL) {
+    var base = document.querySelector('base');
+    return base ? relativeURL.replace(/^\./, base.href) : relativeURL;
+  }
+
+  var client,
+      validConfig = {
+        integrationURI: getRelativeURL('./stubs/hubspot-login.html'),
+        clientId: 'cc7ef1d9-d6a5-48c5-bfe8-c3f74f20633b',
+        applicationScope: [
+          HubSpotOAuthClient.SCOPES.CONTACTS_READ_WRITE,
+          HubSpotOAuthClient.SCOPES.EVENTS_READ_WRITE
+        ],
+        redirectURI: './not-found.html'
+      };
 
   /**
    * Merge the contents of two or more objects together into the first object.
@@ -85,25 +86,6 @@
     );
   });
 
-  QUnit.test('Should validate config.applicationId', function(assert) {
-    assert.expect(3);
-    assert.throws(
-      function() { new HubSpotOAuthClient(exclude(validConfig, ['applicationId'])); },
-      new Error('Missing parameter "applicationId" from config'),
-      'Missing config.applicationId throws an error'
-    );
-    assert.throws(
-      function() { new HubSpotOAuthClient(extend({}, validConfig, { applicationId: '123456' })); },
-      new Error('Parameter "applicationId" in config is invalid: "123456"'),
-      'Invalid config.applicationId (String) throws an error'
-    );
-    assert.throws(
-      function() { new HubSpotOAuthClient(extend({}, validConfig, { applicationId: NaN })); },
-      new Error('Parameter "applicationId" in config is invalid: "NaN"'),
-      'Invalid config.applicationId (NaN) throws an error'
-    );
-  });
-
   QUnit.test('Should validate config.applicationScope', function(assert) {
     assert.expect(4);
     assert.throws(
@@ -155,15 +137,6 @@
       function() { new HubSpotOAuthClient(extend({}, validConfig, { windowHeight: NaN })); },
       new Error('Parameter "windowHeight" in config is invalid: "NaN"'),
       'Invalid config.windowHeight (NaN) throws an error'
-    );
-  });
-
-  QUnit.test('Should validate config.windowTitle', function(assert) {
-    assert.expect(1);
-    assert.throws(
-      function() { new HubSpotOAuthClient(extend({}, validConfig, { windowTitle: 123456 })); },
-      new Error('Parameter "windowTitle" in config is invalid: "123456"'),
-      'Invalid config.windowTitle (number) throws an error'
     );
   });
 
@@ -241,9 +214,8 @@
     assert.strictEqual(typeof promise.then, 'function', '<returned object>.then is a function');
   });
 
-  QUnit.module('_oAuthIntegrationPromise', {
+  QUnit.module('Promise', {
     beforeEach: function() {
-      HubSpotOAuthClient.BASE_URL = getRelativeURL('./stubs/hubspot-login.html');
       client = new HubSpotOAuthClient(validConfig);
     },
     afterEach: function() {
@@ -251,7 +223,6 @@
         client._promiseWindow.close();
       }
       client = null;
-      HubSpotOAuthClient.BASE_URL = getRelativeURL('./stubs/hubspot-login.html');
     }
   });
 
@@ -284,8 +255,8 @@
 
   QUnit.module('redirectURI (success)', {
     beforeEach: function() {
-      HubSpotOAuthClient.BASE_URL = getRelativeURL('./stubs/hubspot-success.html');
       client = new HubSpotOAuthClient(extend({}, validConfig, {
+        integrationURI: getRelativeURL('./stubs/hubspot-success.html'),
         redirectURI: './oauth-callback.html'
       }));
     },
@@ -294,7 +265,6 @@
         client._promiseWindow.close();
       }
       client = null;
-      HubSpotOAuthClient.BASE_URL = './hubspot-login.html';
     }
   });
 
