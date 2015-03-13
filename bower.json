@@ -31,7 +31,7 @@
     "tests"
   ],
   "dependencies": {
-    "promise-window": "~0.3.4"
+    "promise-window": "~1.0.0"
   },
   "devDependencies": {
     "query-string": "~1.0.0",
