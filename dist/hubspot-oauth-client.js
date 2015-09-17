@@ -301,13 +301,7 @@
         'client_id=' + fixedEncodeURIComponent(this.config.clientId),
         'portalId=' + fixedEncodeURIComponent(this.hubId),
         'scope=' + fixedEncodeURIComponent(this.config.applicationScope.join(' ')).replace('%20', '+'),
-        'redirect_uri=' + fixedEncodeURIComponent(
-          this.config.redirectURI +
-          (this.config.redirectURI.indexOf('?') === -1 ? '?' : '&') +
-          [
-            'hubId=' + this.hubId
-          ].join('&')
-        )
+        'redirect_uri=' + fixedEncodeURIComponent(this.config.redirectURI)
       ].join('&');
   };
 
