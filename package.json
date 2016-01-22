@@ -1,5 +1,5 @@
 {
-  "private": true,
+  "name": "hubspot-oauth-client",
   "scripts": {
     "install": "bower install",
     "lint": "jshint --reporter node_modules/jshint-stylish/stylish.js .",
